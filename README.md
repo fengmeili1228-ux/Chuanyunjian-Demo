@@ -32,17 +32,41 @@
 - Maven 3.8+
 - Docker & Docker Compose
 
-## 启动 MySQL / Redis
+## 一键启动全部服务（推荐）
+
+项目已配置 Docker Compose，可一条命令启动 MySQL + Redis + 后端 + 前端：
+
+```bash
+docker compose up -d --build
+```
+
+服务启动后访问：
+
+| 服务 | 地址 |
+| --- | --- |
+| 前端页面 | http://localhost:5173 |
+| 后端 API | http://localhost:8080 |
+| Swagger 文档 | http://localhost:8080/swagger-ui/index.html |
+
+停止全部服务：
+
+```bash
+docker compose down
+```
+
+> 注意：后端 `spring.sql.init.mode` 设置为 `always`，每次启动都会重新执行 `schema.sql` 与 `data.sql`，即会清空并重建数据库、重新插入 Mock 数据。这是为了演示方便，生产环境请改为 `never`。
+
+## 手动启动 MySQL / Redis
 
 如果你已在本机安装 MySQL / Redis，请确保：
 
 - MySQL 端口：`3306`，root 密码与 `application.yml` 中一致
 - Redis 端口：`6379`，无密码
 
-也可使用 Docker 启动：
+也可单独使用 Docker 启动：
 
 ```bash
-docker compose up -d
+docker compose up -d mysql redis
 ```
 
 默认 root 密码：`root8.0`。
@@ -55,7 +79,7 @@ docker compose up -d
 
 首次启动会自动执行 `schema.sql` 与 `data.sql` 初始化数据库和 Mock 数据。
 
-> 说明：`schema.sql` 会先创建 `chuanyunjian` 数据库，因此 `application.yml` 中的 JDBC URL 不指定具体数据库，确保首次启动也能成功建库。
+> 说明：`schema.sql` 会先创建 `chuanyunjian` 数据库；`application.yml` 中 JDBC URL 指定了该数据库名，与 `schema.sql` 保持一致即可。
 
 ## 启动前端
 

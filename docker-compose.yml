@@ -5,19 +5,62 @@ services:
     image: mysql:8.0
     container_name: chuanyunjian-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_ROOT_PASSWORD: root8.0
       MYSQL_DATABASE: chuanyunjian
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - chuanyunjian-net
 
   redis:
     image: redis:7-alpine
     container_name: chuanyunjian-redis
     ports:
       - "6379:6379"
+    networks:
+      - chuanyunjian-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chuanyunjian-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - chuanyunjian-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chuanyunjian-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - chuanyunjian-net
 
 volumes:
   mysql-data:
+
+networks:
+  chuanyunjian-net:
+    driver: bridge
